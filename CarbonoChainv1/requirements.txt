@@ -1,0 +1,9 @@
+sudo apt install python3-pip
+pip3 install couchdb
+pip3 install flask
+pip install bcrypt
+pip install pandas
+pip install gspread
+pip install oauth2client
+pip install cryptography
+

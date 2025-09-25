@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Usuario</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/icon1.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+</head>
+<body class="inicio">
+    <div class="pagina">
+        <header class="canal-header1 {{ protocolo|lower }}">
+            <div class="canal-titulo1">
+                <img src="{{ url_for('static', filename='image/icon2.png') }}" alt="Logo canal" class="icono-canal">
+                <span>{{ nombre_canal }}</span>
+            </div>
+        </header>
+        <div class="form-container">
+            <h2>Registro de Usuario</h2>
+
+            <form method="POST" action="/registrar">
+                <label>Nombre:</label>
+                <input type="text" name="nombre" required>
+            
+                <label>ID:</label>
+                <input type="text" name="_id" required>
+            
+                <label>Clave de sesión:</label>
+                <input type="password" name="clave_sesion" required>
+            
+                <label>Rol:</label>
+                <select name="rol" id="rol" required onchange="mostrarSaldo()">
+                    <option value="">Selecciona...</option>
+                    <option value="observador" {% if rol == "observador" %}selected{% endif %}>Observador</option>
+                    <option value="comprador" {% if rol == "comprador" %}selected{% endif %}>Comprador</option>
+                    <option value="vendedor" {% if rol == "vendedor" %}selected{% endif %}>Vendedor</option>
+                </select>
+            
+                <!-- Aquí va el campo de saldo, que se mostrará o no según el rol -->
+                <div id="saldoDiv" style="display:none;">
+                    <label>Saldo inicial:</label>
+                    <input type="number" id="saldo" name="saldo" step="0.01" required>
+                </div>
+            
+                <button type="submit">Registrar</button>
+            </form>
+            
+            <script>
+                // Función que muestra u oculta el campo de saldo según el rol seleccionado
+                function mostrarSaldo() {
+                    var rol = document.getElementById('rol').value;
+                    var saldoDiv = document.getElementById('saldoDiv');
+                    var saldoInput = document.getElementById('saldo');
+                    
+                    // Mostrar el campo de saldo solo si el rol es 'comprador' o 'vendedor'
+                    if (rol === 'comprador' || rol === 'vendedor') {
+                        saldoDiv.style.display = 'block';
+                        saldoInput.disabled = false;
+                        saldoInput.required = true;
+                    } else {
+                        saldoDiv.style.display = 'none';
+                        saldoInput.disabled = true;
+                        saldoInput.required = false;
+                        saldoInput.value = '';
+                    }
+                }
+            
+                // Llamar a la función al cargar la página por si ya hay un rol seleccionado
+                window.onload = mostrarSaldo;
+            </script>        
+
+            {% if mensaje %}
+                <pre>{{ mensaje }}</pre>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

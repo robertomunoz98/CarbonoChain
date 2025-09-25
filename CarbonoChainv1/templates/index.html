@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar Sesión</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/icon1.png') }}">
+</head>
+<body class="inicio">
+    <div class="pagina">
+        <header class="canal-header1 {{ protocolo|lower }}">
+            <div class="canal-titulo1">
+                <img src="{{ url_for('static', filename='image/icon2.png') }}" alt="Logo canal" class="icono-canal">
+                <span>{{ nombre_canal }}</span>
+            </div>
+        </header>
+        <div class="pantalla-inicio">
+            <!-- Formulario de Login -->
+            <div class="login-section">
+                <h2>Iniciar Sesión</h2>
+                <form method="POST" action="/iniciar_sesion">
+                    <label for="_id">ID:</label>
+                    <input type="text" name="_id" required>
+
+                    <label for="clave_sesion">Clave de sesión:</label>
+                    <input type="password" name="clave_sesion" required>
+
+                    <button type="submit">Entrar</button>
+                    {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="{{ 'alerta-exito' if '✅' in message else 'alerta-error' }}">
+                                <p>{{ message }}</p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+
+                </form>
+            </div>
+
+            <!-- Sección de Registro -->
+            <div class="register-section">
+                <h2>¿Nuevo aquí?</h2>
+                <p>Crea una cuenta para comenzar.</p>
+                <a href="/registrar?canal={{ nombre_canal }}&protocolo={{ protocolo }}">Registrarse</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

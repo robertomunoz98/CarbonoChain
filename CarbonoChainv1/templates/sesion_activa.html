@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ nombre_canal }}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='image/icon1.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+</head>
+<body>
+        <div class="contenedor">
+            <!-- Columna Izquierda: Información del Usuario -->
+             
+            <div class="columna-izquierda">
+                <header class="canal-header {{ protocolo|lower }}">
+                    <div class="canal-titulo">
+                        <img src="{{ url_for('static', filename='image/icon2.png') }}" alt="Logo canal" class="icono-canal">
+                        <span>{{ nombre_canal }}</span>
+                    </div>
+                </header>
+                
+                <h3>Bienvenido, {{ usuario.nombre }}</h3>
+
+                <div class="sidebar">
+                    <h3>👤 {{ usuario.nombre }}</h3>
+                    <p><strong>Id:</strong> {{ usuario._id }}</p>
+                    <p><strong>Rol:</strong> {{ usuario.rol }}</p>
+                    {% if usuario.rol in ["comprador", "vendedor"] %}
+                        <p><strong>Cantidad de bonos:</strong> {{ usuario.cant_bonos }}</p>
+                        <p><strong>Saldo:</strong> {{ usuario.saldo }}</p>
+                    {% endif %}
+                    <a href="{{ url_for('dashboard', modo='bonos_en_venta') }}" class="boton-link-verbonos">Ver bonos de carbono en venta</a>
+                    {% if usuario.rol in ["comprador", "vendedor"] %}
+                        <a href="{{ url_for('dashboard', modo='ver_mis_bonos') }}" class="boton-link-vermisbonos">Ver tus bonos de Carbono</a>
+                        {% if usuario.rol in ["vendedor"] %}
+                            <a href="{{ url_for('dashboard', modo='registrar') }}" class="boton-link-registrarbonos">Registrar bonos de carbono</a>
+                        {% endif %}
+                        <a href="{{ url_for('dashboard', modo='poner_en_venta') }}" class="boton-link-vender">Poner bonos en venta</a>
+                        <a href="{{ url_for('dashboard', modo='ver_transacciones') }}" class="boton-link-transacciones">Historial de transacciones</a>
+                        <a href="{{ url_for('dashboard', modo='retirar') }}" class="boton-link-retirar">Retirar</a>  
+                    {% endif %}
+                    {% if usuario.rol in ["observador"] %}
+                        <a href="{{ url_for('dashboard', modo='cambiar_rol') }}" class="boton-link-registrarbonos">Cambiar rol</a>
+                    {% endif %}
+                </div>
+
+                <br>
+                <form method="POST" action="{{ url_for('cerrar_sesion') }}">
+                    <button type="submit">Cerrar Sesión</button>
+                </form>
+            </div>
+
+            <!-- Columna Derecha: Bonos disponibles -->
+            <div class="columna-derecha">
+
+                {% with mensajes = get_flashed_messages() %}
+                    {% if mensajes %}
+                        {% for mensaje in mensajes %}
+                        <div class="{{ 'alerta-error' if '❌' in mensaje or '🚫' in mensaje else 'alerta-exito' }}">
+                            {{ mensaje }}
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+            
+                {% if modo == 'bonos_en_venta' %}
+                    <h2>🌱 Bonos de carbono en venta</h2>
+                    {% if bonos_en_venta %}
+                        <div class="bonos-grid">
+                            {% for bono in bonos_en_venta %}
+                                <div class="bono-card">
+                                    <!-- Primera fila: ID y Proyecto -->
+                                    <div class="fila-arriba">
+                                        <div class="campo-id">
+                                            <div class="etiqueta">📄 Identificador</div>
+                                            <div class="valor valor-id">{{ bono._id }}</div>
+                                        </div>
+                                        <div class="campo-proyecto">
+                                            <div class="etiqueta">🏗️ Proyecto</div>
+                                            <div class="valor valor-proyecto">{{ bono.proyecto_id }}</div>
+                                        </div>
+                                    </div>
+                                
+                                    <!-- Vendedor -->
+                                    <div class="campo-vendedor">
+                                        <span class="etiqueta">🧑‍💼 ID del vendedor:</span>
+                                        <span class="valor">{{ bono.id_propietario }}</span>
+                                    </div>
+
+                                
+                                    <!-- Cantidad y Precio destacados -->
+                                    <div class="fila-abajo">
+                                        <div class="columna">
+                                            <div class="etiqueta">Cantidad</div>
+                                            <div class="valor-destacado">{{ bono.cantidad_enventa }}</div>
+                                        </div>
+                                        <div class="columna">
+                                            <div class="etiqueta">Precio</div>
+                                            <div class="valor-destacado">${{ bono.precio }}</div>
+                                        </div>
+                                    </div>
+                                
+                                    {% if usuario.rol in ["comprador", "vendedor"] %}
+                                    <form method="GET" action="{{ url_for('dashboard') }}">
+                                        <input type="hidden" name="modo" value="confirmar_compra">
+                                        <input type="hidden" name="bono_id" value="{{ bono._id }}">
+                                        <button type="submit" class="boton-comprar">🛒 Comprar</button>
+                                    </form>
+                                    {% endif %}
+                                </div>    
+                              
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p>🟡 No hay bonos disponibles actualmente.</p>
+                    {% endif %}
+            
+
+
+                {% elif modo == 'ver_mis_bonos' %}
+                    <h2>🌱 Tus bonos de carbono disponibles</h2>
+                    {% if bonos_disponibles %}
+                        <table class="tabla-bonos">
+                            <thead>
+                                <tr>
+                                    <th>📄 ID</th>
+                                    <th>🏗️ Proyecto</th>
+                                    <th>📦 Disponible</th>
+                                    <th>🛒 En venta</th>
+                                    <th>📊 Total</th>
+                                    <th>💵 Precio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bono in bonos_disponibles %}
+                                    <tr>
+                                        <td>{{ bono._id }}</td>
+                                        <td>{{ bono.proyecto_id }}</td>
+                                        <td>{{ bono.cantidad_disponible }}</td>
+                                        <td>{{ bono.cantidad_enventa }}</td>
+                                        <td>{{ bono.cantidad_total }}</td>
+                                        <td>${{ bono.precio }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>🟡 No tienes bonos disponibles actualmente.</p>
+                    {% endif %}
+                
+
+                {% elif modo == 'registrar' %}
+                    <h2>🔍 Registrar bono de carbono</h2>
+                    <form method="POST" action="{{ url_for('procesar_registro_bono') }}">
+                        <label>Serial del bono:</label>
+                        <input type="text" name="serial_bono" required>
+                        <button type="submit">Registrar</button>
+                    </form>
+            
+                {% elif modo == 'poner_en_venta' %}
+                    <h2>📦 Pon en venta tus bonos de carbono</h2>
+                    {% if mis_bonos_disponibles %}
+                        <form method="POST" action="{{ url_for('procesar_venta') }}">
+                            <label for="bono_id">Selecciona un bono:</label>
+                            <select name="bono_id" id="bono_id" onchange="actualizarDetalles()">
+                                {% for bono in mis_bonos_disponibles %}
+                                    <option value="{{ bono._id }}"
+                                    data-enventa="{{ bono.cantidad_enventa or 0 }}"
+                                    data-precio="{{ bono.precio or '' }}"
+                                    data-estado="{{ bono.estado }}">
+                                        ID: {{ bono._id }} | Cantidad: {{ bono.cantidad_disponible }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div id="info_bono" style="margin-top: 10px;"></div>
+                            <br><label>Precio (por unidad):</label>
+                            <input type="number" name="precio" step="0.01" required>
+                            <br><label>Cantidad a vender:</label>
+                            <input type="number" name="cantidad" step="0.1" required>
+                            <button type="submit">Poner en venta</button>
+                        </form>
+                        <script>
+                            function actualizarDetalles() {
+                                const select = document.getElementById("bono_id");
+                                const selected = select.options[select.selectedIndex];
+                                const enVenta = selected.getAttribute("data-enventa");
+                                const precio = selected.getAttribute("data-precio");
+                                const estado = selected.getAttribute("data-estado");
+                    
+                                const infoDiv = document.getElementById("info_bono");
+
+                                // Solo mostrar si el estado del bono es "en_venta"
+                                if (estado === "en_venta") {
+                                    infoDiv.innerHTML = `<strong>Actualmente tienes:</strong> ${enVenta} en venta a un precio de $${precio}`;
+                                } else {
+                                    infoDiv.innerHTML = "";  // No mostrar nada si está registrado u otro estado
+                                }
+                            }
+                            document.addEventListener("DOMContentLoaded", actualizarDetalles);
+                        </script>
+                    {% else %}
+                        <p>🚫 No tienes bonos disponibles para vender.</p>
+                    {% endif %}
+                {% elif modo == 'confirmar_compra' %}
+                    <div class="confirmacion-container">
+                        <h2>🛒 Confirmar compra de bono</h2>
+                    
+                        <!-- Información del bono en un recuadro -->
+                        <div class="bono-info">
+                            <p><strong>📄 ID:</strong> {{ bono._id }}</p>
+                            <p><strong>🏗️ Proyecto:</strong> {{ bono.proyecto_id }}</p>
+                            <p><strong>📦 Cantidad disponible:</strong> {{ bono.cantidad_enventa }}</p>
+                            <p><strong>💰 Precio:</strong> {{ bono.precio }}</p>
+                            <p><strong>👤 ID del vendedor:</strong> {{ bono.id_propietario }}</p>
+                            <p><strong>🧑‍💼 Desarrollador:</strong> {{ bono.desarrollador }}</p>
+                            <p><strong>🔖 Serial de origen:</strong> {{ bono.serial_origen }}</p>
+                            <p><strong>🌍 Origen:</strong> {{ bono.origen }}</p>
+                        </div>
+                    
+                        <!-- Separador visual -->
+                        <hr class="separador-compra">
+                    
+                        <!-- Formulario -->
+                        <form method="POST" action="{{ url_for('comprar_bono') }}">
+                            <input type="hidden" name="bono_id" value="{{ bono._id }}">
+                    
+                            <label for="cantidad">Escribe la cantidad a comprar.</label>
+                            <label for="cantidad">Puede comprar desde 0.1 hasta la cantidad máxima ofertada:</label>
+                            <input type="number" lang="en" name="cantidad" min="0.1" step="0.1" max="{{ bono.cantidad_enventa }}" class="input-grande" placeholder="Cantidad a comprar" required>
+                    
+                            <p><strong>Escribe tus palabras de seguridad para realizar esta transacción:</strong></p>
+                    
+                            <div class="palabras-seguridad">
+                                <input type="text" name="palabra1" placeholder="Palabra 1" required class="input-palabra">
+                                <span class="separador">-</span>
+                                <input type="text" name="palabra2" placeholder="Palabra 2" required class="input-palabra">
+                            </div>
+                    
+                            <button type="submit" class="boton-link">✅ Confirmar compra</button>
+                        </form>
+                    </div>
+                
+                {% elif modo == 'ver_transacciones' %}    
+                    <h2>📜 Historial de transacciones</h2>
+                    {% if transacciones %}
+                      <ul>
+                        {% for tx in transacciones|reverse %}
+                          <div class="transaccion-linea">
+                            <div class="tipo-transaccion">Tipo transacción: {{ tx.tipo }}</div>
+                            <span class="label">Bono:</span> {{ tx.bono_nuevo }}
+                            <span class="label">Cantidad:</span> {{ tx.cantidad }}
+                            <span class="label">Precio unitario: </span> {{ tx.precio_unitario }}
+                            <span class="label">Total: </span> {{ tx.total_pagado }}
+                            <span class="label">
+                                {% if tx.comprador == usuario_id %}
+                                  Vendido por:
+                                {% else %}
+                                  Comprado por:
+                                {% endif %}
+                              </span> 
+                              {% if tx.comprador == usuario_id %}
+                                {{ tx.vendedor }}
+                              {% else %}
+                                {{ tx.comprador }}
+                              {% endif %}
+                            <span class="label">Fecha: </span> {{ tx.timestamp.split('T')[0] }}
+                          </div>
+                        {% endfor %}
+                      </ul>
+                    {% else %}
+                      <p>No tienes transacciones registradas.</p>
+                    {% endif %}
+                {% elif modo == 'cambiar_rol' %}    
+                    <h2>👤 Cambiar rol</h2>
+                    <form method="POST" action="{{ url_for('cambiar_rol') }}">
+                        <label>Nuevo rol:</label>
+                        <select name="nuevo_rol" required>
+                            <option value="">Selecciona...</option>
+                            <option value="comprador">Comprador</option>
+                            <option value="vendedor">Vendedor</option>
+                        </select>
+                
+                        <label>Saldo inicial:</label>
+                        <input type="number" name="saldo" step="0.01" required>
+                
+                        <button type="submit">Cambiar rol</button>
+                    </form>
+                {% elif modo == 'retirar' %}
+                    <h2>🚫 Retira bonos de carbono</h2>
+                    {% if mis_bonos_disponibles %}
+                        
+                        <label for="bono_id">Selecciona un bono a retirar:</label>
+                        <select name="bono_id" id="bono_id" onchange="actualizarDetalles()">
+                            {% for bono in mis_bonos_disponibles %}
+                                <option value="{{ bono._id }}"
+                                data-enventa="{{ bono.cantidad_enventa or 0 }}"
+                                data-precio="{{ bono.precio or '' }}"
+                                data-estado="{{ bono.estado }}">
+                                    ID: {{ bono._id }} | Cantidad: {{ bono.cantidad_disponible }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <br>
+                        <label>🚫 Está opción aún no se encuentra disponible.</label>
+                        
+                    {% else %}
+                        <p>🚫 No tienes bonos disponibles para vender.</p>
+                    {% endif %}
+                
+                {% endif %}
+            </div>
+            
+
+            
+        </div>
+</body>
+</html>
